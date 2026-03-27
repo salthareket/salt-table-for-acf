@@ -361,3 +361,67 @@
     border-radius: 8px;
     width:700px;
 }
+
+
+/* CELL HOVER & CLICK FEEDBACK { */
+
+	.acf-table-body-cell,
+	.acf-table-header-cell {
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+	}
+	.acf-table-body-cell:hover {
+		background-color: #f0f6fc;
+	}
+	.acf-table-header-cell:hover {
+		background-color: #eef3f7;
+	}
+
+	/* Boş hücre placeholder */
+	.acf-table-body-cell .acf-table-body-cont:empty::after,
+	.acf-table-header-cell .acf-table-header-cont:empty::after {
+		content: attr(data-placeholder);
+		color: #c3c4c7;
+		font-style: italic;
+		font-size: 12px;
+		pointer-events: none;
+	}
+
+/* CELL HOVER } */
+
+/* MODAL FOOTER — primary action sağda { */
+
+	.acf-table-modal-footer {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		padding-top: 16px;
+		border-top: 1px solid #ddd;
+		margin-top: 16px;
+	}
+
+/* MODAL FOOTER } */
+
+/* CELL PREVIEW IMPROVEMENTS { */
+
+	.acf-table-cell-preview {
+		max-height: 60px;
+		overflow: hidden;
+		font-size: 13px;
+		line-height: 1.4;
+	}
+	.acf-table-boolean-preview {
+		font-size: 16px;
+		text-align: center;
+	}
+	.acf-table-image-preview img {
+		border-radius: 3px;
+		max-height: 50px;
+		width: auto;
+	}
+	.acf-table-file-preview a {
+		font-size: 12px;
+		word-break: break-all;
+	}
+
+/* CELL PREVIEW } */
