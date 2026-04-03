@@ -10,7 +10,6 @@
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: salt-table-for-acf
  * Domain Path: /languages
- * Requires Plugins: advanced-custom-fields
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
