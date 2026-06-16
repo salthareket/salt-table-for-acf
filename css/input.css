@@ -345,7 +345,7 @@
     display: none;       /* JS ile açarken önemli */
     position: fixed !important;     /* Ekranda sabit */
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 9999 !important;       /* Her şeyin üstünde */
+    z-index: 110000 !important;       /* Her şeyin üstünde */
     justify-content: center;
     align-items: center;
     background: rgba(0,0,0,0.5);   /* overlay */

@@ -1,5 +1,32 @@
 <?php
 
+/**
+ * salt_acf_field_table — ACF Table Extended Field Type
+ *
+ * @version 1.3.31
+ *
+ * @changelog
+ *   1.3.31 - 2026-05-18
+ *     - Add: format_value() — image/text_image cell'lerine alt text eklendi
+ *       - _wp_attachment_image_alt meta'dan alınır, boşsa post title kullanılır
+ *       - Body ve header cell'lerinde çalışır
+ *   1.3.30 - Önceki versiyon
+ *
+ * How to use:
+ *   // Twig'de image cell alt text:
+ *   <img src="{{ cell.image.url }}" alt="{{ cell.image.alt }}" />
+ *
+ *   // PHP'de format_value() sonrası:
+ *   $table = get_field('table');
+ *   foreach ($table['body'] as $row) {
+ *       foreach ($row as $cell) {
+ *           if ($cell['type'] === 'image') {
+ *               echo $cell['image']['alt']; // artık dolu geliyor
+ *           }
+ *       }
+ *   }
+ */
+
 class salt_acf_field_table extends acf_field {
 
 	/*
@@ -520,6 +547,37 @@ class salt_acf_field_table extends acf_field {
 			// BODY
 
 			$value['body'] = $a['b'];
+
+			// Image cell'lerine alt text ekle
+			foreach ( $value['body'] as $row_idx => $row ) {
+				foreach ( $row as $col_idx => $cell ) {
+					if ( isset( $cell['type'] ) && in_array( $cell['type'], ['image', 'text_image'], true ) ) {
+						if ( ! empty( $cell['image']['id'] ) ) {
+							$alt = get_post_meta( (int) $cell['image']['id'], '_wp_attachment_image_alt', true );
+							if ( empty( $alt ) ) {
+								$alt = get_the_title( (int) $cell['image']['id'] );
+							}
+							$value['body'][ $row_idx ][ $col_idx ]['image']['alt'] = $alt ?: '';
+						}
+					}
+				}
+			}
+
+			// Header image cell'lerine alt text ekle
+			if ( ! empty( $value['header'] ) && is_array( $value['header'] ) ) {
+				foreach ( $value['header'] as $col_idx => $cell ) {
+					$c = $cell['c'] ?? $cell;
+					if ( isset( $c['type'] ) && in_array( $c['type'], ['image', 'text_image'], true ) ) {
+						if ( ! empty( $c['image']['id'] ) ) {
+							$alt = get_post_meta( (int) $c['image']['id'], '_wp_attachment_image_alt', true );
+							if ( empty( $alt ) ) {
+								$alt = get_the_title( (int) $c['image']['id'] );
+							}
+							$value['header'][ $col_idx ]['c']['image']['alt'] = $alt ?: '';
+						}
+					}
+				}
+			}
 
 			// IF SINGLE EMPTY CELL, THEN DO NOT RETURN TABLE DATA
 
