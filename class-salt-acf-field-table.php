@@ -452,7 +452,41 @@ class salt_acf_field_table extends acf_field {
 			$value = $this->table_slash( $value );
 		}
 
+		// Cache invalidation: tablo kaydedilince image cache'lerini temizle
+		$this->invalidate_image_cache( $value );
+
 		return $value;
+	}
+
+	/**
+	 * Tablo içindeki tüm image ID'lerinin wp_cache entry'lerini temizler.
+	 * Tablo güncellenince veya kaynak post güncellenince çağrılır.
+	 */
+	private function invalidate_image_cache( $value ): void {
+		if ( ! is_array( $value ) ) return;
+
+		// Raw format — b (body) ve h (header) key'leri
+		$body   = $value['b']      ?? $value['body']   ?? [];
+		$header = $value['h']      ?? $value['header'] ?? [];
+
+		foreach ( $body as $row ) {
+			foreach ( $row as $cell ) {
+				$img_id = $cell['image']['id'] ?? 0;
+				if ( $img_id ) {
+					wp_cache_delete( 'salt_table_img_' . (int) $img_id, 'salt_table' );
+				}
+			}
+		}
+
+		if ( is_array( $header ) ) {
+			foreach ( $header as $cell ) {
+				$c      = $cell['c'] ?? $cell;
+				$img_id = $c['image']['id'] ?? 0;
+				if ( $img_id ) {
+					wp_cache_delete( 'salt_table_img_' . (int) $img_id, 'salt_table' );
+				}
+			}
+		}
 	}
 
 
@@ -553,11 +587,27 @@ class salt_acf_field_table extends acf_field {
 				foreach ( $row as $col_idx => $cell ) {
 					if ( isset( $cell['type'] ) && in_array( $cell['type'], ['image', 'text_image'], true ) ) {
 						if ( ! empty( $cell['image']['id'] ) ) {
-							$alt = get_post_meta( (int) $cell['image']['id'], '_wp_attachment_image_alt', true );
-							if ( empty( $alt ) ) {
-								$alt = get_the_title( (int) $cell['image']['id'] );
+							$img_id = (int) $cell['image']['id'];
+
+							// wp_cache ile 0q cache
+							$img_meta = wp_cache_get( 'salt_table_img_' . $img_id, 'salt_table' );
+							if ( false === $img_meta ) {
+								$alt = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
+								if ( empty( $alt ) ) {
+									$alt = get_the_title( $img_id );
+								}
+								$src = wp_get_attachment_image_src( $img_id, 'full' );
+								$img_meta = [
+									'alt'    => $alt ?: '',
+									'width'  => $src ? (int) $src[1] : 0,
+									'height' => $src ? (int) $src[2] : 0,
+								];
+								wp_cache_set( 'salt_table_img_' . $img_id, $img_meta, 'salt_table', 3600 );
 							}
-							$value['body'][ $row_idx ][ $col_idx ]['image']['alt'] = $alt ?: '';
+
+							$value['body'][ $row_idx ][ $col_idx ]['image']['alt']    = $img_meta['alt'];
+							$value['body'][ $row_idx ][ $col_idx ]['image']['width']  = $img_meta['width'];
+							$value['body'][ $row_idx ][ $col_idx ]['image']['height'] = $img_meta['height'];
 						}
 					}
 				}
@@ -569,11 +619,26 @@ class salt_acf_field_table extends acf_field {
 					$c = $cell['c'] ?? $cell;
 					if ( isset( $c['type'] ) && in_array( $c['type'], ['image', 'text_image'], true ) ) {
 						if ( ! empty( $c['image']['id'] ) ) {
-							$alt = get_post_meta( (int) $c['image']['id'], '_wp_attachment_image_alt', true );
-							if ( empty( $alt ) ) {
-								$alt = get_the_title( (int) $c['image']['id'] );
+							$img_id = (int) $c['image']['id'];
+
+							$img_meta = wp_cache_get( 'salt_table_img_' . $img_id, 'salt_table' );
+							if ( false === $img_meta ) {
+								$alt = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
+								if ( empty( $alt ) ) {
+									$alt = get_the_title( $img_id );
+								}
+								$src = wp_get_attachment_image_src( $img_id, 'full' );
+								$img_meta = [
+									'alt'    => $alt ?: '',
+									'width'  => $src ? (int) $src[1] : 0,
+									'height' => $src ? (int) $src[2] : 0,
+								];
+								wp_cache_set( 'salt_table_img_' . $img_id, $img_meta, 'salt_table', 3600 );
 							}
-							$value['header'][ $col_idx ]['c']['image']['alt'] = $alt ?: '';
+
+							$value['header'][ $col_idx ]['c']['image']['alt']    = $img_meta['alt'];
+							$value['header'][ $col_idx ]['c']['image']['width']  = $img_meta['width'];
+							$value['header'][ $col_idx ]['c']['image']['height'] = $img_meta['height'];
 						}
 					}
 				}
